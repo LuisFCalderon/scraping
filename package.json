@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "puppeteer": "^19.2.2"
+  },
+  "devDependencies": {
+    "standard": "^17.0.0"
+  }
+}
