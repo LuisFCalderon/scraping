@@ -76,8 +76,10 @@ async function getURLs () {
       }
     })
     if (!data.title) {
-      console.log('I could\'t find the title 🤔')
       warnings += 1
+      console.log('I could\'t find the title 🤔')
+      console.log('\n')
+      continue
     }
     if (data.publishedDate) {
       data.publishedDate = format(parseISO(data.publishedDate), 'yyyy-MM-dd')
@@ -87,9 +89,8 @@ async function getURLs () {
     console.log('\n')
   }
   await browser.close()
-  const success = results.filter(item => item.title)
-  fs.writeFileSync(file, JSON.stringify(success), 'utf8')
-  console.log(`✓ ${results.length - missing - warnings}`)
+  fs.writeFileSync(file, JSON.stringify(results), 'utf8')
+  console.log(`✓ ${results.length} entries saved`)
   console.log(`⚠ ${warnings} entries omitted because title is missing`)
   console.log(`X ${missing} missing pages`)
 })()
