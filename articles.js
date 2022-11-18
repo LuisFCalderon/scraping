@@ -51,7 +51,8 @@ async function getURLs () {
   for (let index = 0; index < total; index++) {
     console.log(`Processing ${index + 1} / ${total}`)
     const url = urls[index]
-    const response = await page.goto('https://www.semana.com' + url, {
+    const completeURL = 'https://www.semana.com' + url
+    const response = await page.goto(completeURL, {
       timeout: 60000
     })
     if (response.status() === 404) {
@@ -60,9 +61,18 @@ async function getURLs () {
       console.log('\n')
       continue
     }
-    const data = await page.evaluate(() => {
+    const data = await page.evaluate((completeURL) => {
       const overlineText = document.querySelector('h3.overlineText ')?.textContent ?? ''
-      const title = document.querySelector(overlineText === 'opinión' ? '.article-box-opinion h2' : '.article-main h1')
+      // Si no es columna de opinión, ignorar
+      if (overlineText !== 'opinión') {
+        return {}
+      }
+      const author = document.querySelector('div.section.sp-8')?.textContent ?? ''
+      // Si el nombre del autor no contiene Didier, ignorar
+      if (!author.includes('Didier')) {
+        return {}
+      }
+      const title = document.querySelector('.article-box-opinion h2')
       const excerpt = document.querySelector('h2.h2')?.textContent ?? ''
       const publishedDate = document.querySelector('.datetime')?.textContent ?? ''
       const [day, month, year] = publishedDate.split('/')
@@ -72,12 +82,13 @@ async function getURLs () {
         excerpt,
         publishedDate: publishedDate ? new Date(+year, +month - 1, +day).toISOString() : '',
         content: content.length ? content.reduce((result, p) => result + `<p>${p.innerHTML}</p>`, '') : '',
-        scope: overlineText
+        scope: overlineText,
+        link: completeURL
       }
-    })
-    if (!data.title) {
+    }, completeURL)
+    if (!data.title || !data.content) {
       warnings += 1
-      console.log('I could\'t find the title 🤔')
+      console.log('I could\'t find the title or content 🤔')
       console.log('\n')
       continue
     }
